@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="تطبيق إدارة الحجوزات السياحية - Situation 2026">
+    <meta name="theme-color" content="#0a1628">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Situation 2026</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="splash-screen">
+        <div class="splash-content">
+            <div class="splash-icon">
+                <i class="fas fa-plane-departure"></i>
+            </div>
+            <h1 class="splash-title">Situation 2026</h1>
+            <p class="splash-subtitle">إدارة الحجوزات السياحية</p>
+            <div class="splash-loader">
+                <div class="loader-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-screen" style="display:none;">
+        <div class="login-content">
+            <div class="login-icon"><i class="fas fa-lock"></i></div>
+            <h2>أدخل رمز الدخول</h2>
+            <div class="pin-display" id="pin-display">
+                <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+            </div>
+            <div class="pin-error" id="pin-error"></div>
+            <div class="pin-pad">
+                <button class="pin-key" data-val="1">1</button>
+                <button class="pin-key" data-val="2">2</button>
+                <button class="pin-key" data-val="3">3</button>
+                <button class="pin-key" data-val="4">4</button>
+                <button class="pin-key" data-val="5">5</button>
+                <button class="pin-key" data-val="6">6</button>
+                <button class="pin-key" data-val="7">7</button>
+                <button class="pin-key" data-val="8">8</button>
+                <button class="pin-key" data-val="9">9</button>
+                <button class="pin-key pin-key-empty"></button>
+                <button class="pin-key" data-val="0">0</button>
+                <button class="pin-key pin-key-del" id="pin-delete"><i class="fas fa-backspace"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Setup Modal -->
+    <div id="setup-modal" class="modal" style="display:none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-cog"></i> إعداد التطبيق</h2>
+            </div>
+            <div class="modal-body">
+                <p class="setup-desc">أدخل رابط Google Apps Script الخاص بك للربط المباشر بالشيت</p>
+                <div class="form-group">
+                    <label for="api-url-input">رابط الـ Web App</label>
+                    <input type="url" id="api-url-input" placeholder="https://script.google.com/macros/s/..." dir="ltr">
+                    <small class="form-hint">راجع ملف Code.gs لمعرفة كيفية الحصول على الرابط</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-api-btn" class="btn btn-primary btn-block">
+                    <i class="fas fa-save"></i> حفظ وبدء
+                </button>
+                <button id="demo-mode-btn" class="btn btn-ghost btn-block">
+                    <i class="fas fa-play"></i> تجربة بدون ربط (بيانات تجريبية)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Header -->
+    <header id="app-header" class="app-header">
+        <div class="header-right">
+            <h1 class="header-title" id="page-title">الرئيسية</h1>
+        </div>
+        <div class="header-left">
+            <div class="exchange-ticker" id="exchange-ticker" title="أسعار الصرف الحية">
+                <span class="ticker-item">$ <span id="rate-usd">47</span></span>
+                <span class="ticker-item">€ <span id="rate-eur">55</span></span>
+                <span class="ticker-item">£ <span id="rate-gbp">62</span></span>
+            </div>
+            <button class="header-btn" id="theme-toggle-btn" title="تغيير المظهر">
+                <i class="fas fa-sun" id="theme-icon"></i>
+            </button>
+            <button class="header-btn" id="refresh-btn" title="تحديث">
+                <i class="fas fa-sync-alt" id="refresh-icon"></i>
+            </button>
+            <button class="header-btn" id="settings-btn" title="إعدادات">
+                <i class="fas fa-cog"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main id="main-content" class="main-content">
+        
+        <!-- Dashboard Page -->
+        <section id="page-dashboard" class="page active">
+            <div class="page-scroll">
+                <!-- Month Selector -->
+                <div class="month-selector" id="dashboard-month-selector">
+                    <button class="month-btn active" data-month="all">الكل</button>
+                    <button class="month-btn" data-month="01/2026">يناير</button>
+                    <button class="month-btn" data-month="02/2026">فبراير</button>
+                    <button class="month-btn" data-month="03/2026">مارس</button>
+                    <button class="month-btn" data-month="04/2026">أبريل</button>
+                    <button class="month-btn" data-month="05/2026">مايو</button>
+                    <button class="month-btn" data-month="06/2026">يونيو</button>
+                    <button class="month-btn" data-month="07/2026">يوليو</button>
+                    <button class="month-btn" data-month="08/2026">أغسطس</button>
+                    <button class="month-btn" data-month="09/2026">سبتمبر</button>
+                    <button class="month-btn" data-month="10/2026">أكتوبر</button>
+                    <button class="month-btn" data-month="11/2026">نوفمبر</button>
+                    <button class="month-btn" data-month="12/2026">ديسمبر</button>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid" id="stats-grid">
+                    <div class="stat-card stat-primary">
+                        <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-bookings">0</span>
+                            <span class="stat-label">إجمالي الحجوزات</span>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-success">
+                        <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-revenue-usd">$0</span>
+                            <span class="stat-label">الإيرادات (دولار)</span>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-warning">
+                        <div class="stat-icon"><i class="fas fa-coins"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-revenue-egp">0</span>
+                            <span class="stat-label">الإيرادات (جنيه)</span>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-info">
+                        <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="stat-net">0</span>
+                            <span class="stat-label">صافي الربح</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="card" id="trips-chart-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-route"></i> أفضل الرحلات</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="bar-chart" id="trips-chart"></div>
+                    </div>
+                </div>
+
+                <div class="card" id="nationality-chart-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-globe-americas"></i> الجنسيات</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="donut-chart-container" id="nationality-chart"></div>
+                    </div>
+                </div>
+
+                <div class="card" id="today-trips-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-plane"></i> رحلات اليوم</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="today-trips-list" class="today-trips-list">
+                            <div class="empty-state">
+                                <i class="fas fa-umbrella-beach"></i>
+                                <p>لا توجد رحلات اليوم</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reservations Page -->
+        <section id="page-reservations" class="page">
+            <div class="page-scroll">
+                <!-- Search & Filter -->
+                <div class="search-bar">
+                    <div class="search-input-wrapper">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="search-input" placeholder="بحث بالرحلة، الفندق، الجنسية...">
+                    </div>
+                </div>
+                <!-- Advanced Filter -->
+                <div class="filter-bar" id="filter-bar">
+                    <select id="filter-status" class="filter-select">
+                        <option value="">كل الحالات</option>
+                        <option value="paid">مدفوع</option>
+                        <option value="partial">جزئي</option>
+                        <option value="unpaid">غير مدفوع</option>
+                    </select>
+                    <select id="filter-supplier" class="filter-select"><option value="">كل الموردين</option></select>
+                    <select id="filter-sales" class="filter-select"><option value="">كل المبيعات</option></select>
+                    <button class="filter-btn" id="print-daily-btn" title="طباعة تقرير يومي"><i class="fas fa-print"></i></button>
+                </div>
+                
+                <div class="month-selector" id="reservations-month-selector">
+                    <button class="month-btn active" data-month="04/2026">أبريل</button>
+                    <button class="month-btn" data-month="01/2026">يناير</button>
+                    <button class="month-btn" data-month="02/2026">فبراير</button>
+                    <button class="month-btn" data-month="03/2026">مارس</button>
+                    <button class="month-btn" data-month="05/2026">مايو</button>
+                    <button class="month-btn" data-month="06/2026">يونيو</button>
+                    <button class="month-btn" data-month="07/2026">يوليو</button>
+                    <button class="month-btn" data-month="08/2026">أغسطس</button>
+                    <button class="month-btn" data-month="09/2026">سبتمبر</button>
+                    <button class="month-btn" data-month="10/2026">أكتوبر</button>
+                    <button class="month-btn" data-month="11/2026">نوفمبر</button>
+                    <button class="month-btn" data-month="12/2026">ديسمبر</button>
+                </div>
+
+                <!-- Sort Controls -->
+                <div class="sort-bar">
+                    <span class="sort-label"><i class="fas fa-sort"></i> ترتيب:</span>
+                    <button class="sort-btn active" data-sort="date">التاريخ</button>
+                    <button class="sort-btn" data-sort="price">السعر</button>
+                    <button class="sort-btn" data-sort="status">الحالة</button>
+                    <button class="sort-btn" data-sort="trip">الرحلة</button>
+                </div>
+
+                <!-- Reservations List -->
+                <div id="reservations-list" class="reservations-list">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        <p>جاري تحميل الحجوزات...</p>
+                    </div>
+                </div>
+
+                <!-- FAB - Add Reservation -->
+                <button class="fab" id="add-reservation-btn" title="إضافة حجز جديد">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Finance Page -->
+        <section id="page-finance" class="page">
+            <div class="page-scroll">
+                <div class="month-selector" id="finance-month-selector">
+                    <button class="month-btn active" data-month="all">الكل</button>
+                    <button class="month-btn" data-month="04/2026">أبريل</button>
+                    <button class="month-btn" data-month="01/2026">يناير</button>
+                    <button class="month-btn" data-month="02/2026">فبراير</button>
+                    <button class="month-btn" data-month="03/2026">مارس</button>
+                    <button class="month-btn" data-month="05/2026">مايو</button>
+                    <button class="month-btn" data-month="06/2026">يونيو</button>
+                    <button class="month-btn" data-month="07/2026">يوليو</button>
+                    <button class="month-btn" data-month="08/2026">أغسطس</button>
+                    <button class="month-btn" data-month="09/2026">سبتمبر</button>
+                    <button class="month-btn" data-month="10/2026">أكتوبر</button>
+                    <button class="month-btn" data-month="11/2026">نوفمبر</button>
+                    <button class="month-btn" data-month="12/2026">ديسمبر</button>
+                </div>
+
+                <!-- Finance Summary Cards -->
+                <div class="finance-cards" id="finance-cards">
+                    <div class="finance-card">
+                        <div class="finance-card-header">
+                            <i class="fas fa-hand-holding-usd"></i>
+                            <span>الإيرادات</span>
+                        </div>
+                        <div class="finance-card-body">
+                            <div class="currency-row"><span class="curr-label">EGP</span><span class="curr-value" id="fin-rev-egp">0</span></div>
+                            <div class="currency-row"><span class="curr-label">USD</span><span class="curr-value" id="fin-rev-usd">$0</span></div>
+                            <div class="currency-row"><span class="curr-label">EUR</span><span class="curr-value" id="fin-rev-eur">€0</span></div>
+                            <div class="currency-row"><span class="curr-label">GBP</span><span class="curr-value" id="fin-rev-gbp">£0</span></div>
+                        </div>
+                    </div>
+                    <div class="finance-card">
+                        <div class="finance-card-header">
+                            <i class="fas fa-chart-pie"></i>
+                            <span>الأرباح</span>
+                        </div>
+                        <div class="finance-card-body">
+                            <div class="currency-row"><span class="curr-label">EGP</span><span class="curr-value" id="fin-prof-egp">0</span></div>
+                            <div class="currency-row"><span class="curr-label">USD</span><span class="curr-value" id="fin-prof-usd">$0</span></div>
+                            <div class="currency-row"><span class="curr-label">EUR</span><span class="curr-value" id="fin-prof-eur">€0</span></div>
+                            <div class="currency-row"><span class="curr-label">GBP</span><span class="curr-value" id="fin-prof-gbp">£0</span></div>
+                        </div>
+                    </div>
+                    <div class="finance-card highlight">
+                        <div class="finance-card-header">
+                            <i class="fas fa-trophy"></i>
+                            <span>صافي الربح</span>
+                        </div>
+                        <div class="finance-card-body">
+                            <div class="net-value" id="fin-net">EGP 0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Suppliers -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-truck"></i> أفضل الموردين</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="bar-chart" id="suppliers-chart"></div>
+                    </div>
+                </div>
+
+                <!-- Sales Performance -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-user-tie"></i> أداء المبيعات</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="bar-chart" id="sales-chart"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Page -->
+        <section id="page-settings" class="page">
+            <div class="page-scroll">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-link"></i> ربط Google Sheet</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>رابط Web App</label>
+                            <input type="url" id="settings-api-url" placeholder="https://script.google.com/macros/s/..." dir="ltr">
+                        </div>
+                        <button class="btn btn-primary btn-block" id="settings-save-btn">
+                            <i class="fas fa-save"></i> حفظ الرابط
+                        </button>
+                        <div class="connection-status" id="connection-status">
+                            <i class="fas fa-circle"></i>
+                            <span>غير متصل</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-shield-alt"></i> رمز الدخول (PIN)</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>رمز PIN (4 أرقام)</label>
+                            <input type="password" id="settings-pin" placeholder="****" maxlength="4" dir="ltr" inputmode="numeric">
+                        </div>
+                        <button class="btn btn-primary btn-block" id="settings-pin-save">
+                            <i class="fas fa-lock"></i> تعيين / تغيير PIN
+                        </button>
+                        <button class="btn btn-ghost btn-block" id="settings-pin-remove" style="margin-top:8px;">
+                            <i class="fas fa-unlock"></i> إزالة PIN
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-info-circle"></i> عن التطبيق</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="about-info">
+                            <p><strong>Situation 2026</strong></p>
+                            <p>تطبيق إدارة الحجوزات السياحية</p>
+                            <p>الإصدار 1.0.0</p>
+                            <p class="about-credit">Powered by Antigravity AI</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-danger btn-block" id="clear-cache-btn">
+                    <i class="fas fa-trash-alt"></i> مسح الكاش وإعادة تعيين
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Add/Edit Reservation Modal -->
+    <div id="reservation-modal" class="modal" style="display:none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-full">
+            <div class="modal-header">
+                <h2 id="reservation-modal-title"><i class="fas fa-plus-circle"></i> إضافة حجز</h2>
+                <button class="modal-close" id="close-reservation-modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="reservation-form">
+                    <input type="hidden" id="edit-row-index">
+                    <input type="hidden" id="edit-month">
+                    
+                    <div class="form-section">
+                        <h4><i class="fas fa-info-circle"></i> بيانات الرحلة</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>التاريخ</label>
+                                <input type="date" id="res-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label>الرحلة</label>
+                                <input type="text" id="res-trip" placeholder="مثال: ras mohamed" required>
+                            </div>
+                        </div>
+                        <div class="form-row form-row-3">
+                            <div class="form-group">
+                                <label>بالغين</label>
+                                <input type="text" id="res-adults" placeholder="2">
+                            </div>
+                            <div class="form-group">
+                                <label>أطفال</label>
+                                <input type="text" id="res-children" placeholder="-">
+                            </div>
+                            <div class="form-group">
+                                <label>رضع</label>
+                                <input type="text" id="res-infants" placeholder="-">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4><i class="fas fa-hotel"></i> الإقامة</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>الفندق</label>
+                                <input type="text" id="res-hotel" placeholder="اسم الفندق">
+                            </div>
+                            <div class="form-group">
+                                <label>الغرفة</label>
+                                <input type="text" id="res-room" placeholder="رقم الغرفة">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>وقت الاستلام</label>
+                                <input type="text" id="res-pickup" placeholder="8:00">
+                            </div>
+                            <div class="form-group">
+                                <label>الجنسية</label>
+                                <input type="text" id="res-nationality" placeholder="pol, eng, arab...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4><i class="fas fa-money-bill-wave"></i> الأسعار</h4>
+                        <div class="form-row form-row-4">
+                            <div class="form-group">
+                                <label>EGP</label>
+                                <input type="number" id="res-price-egp" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label>USD $</label>
+                                <input type="number" id="res-price-usd" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label>EUR €</label>
+                                <input type="number" id="res-price-eur" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label>GBP £</label>
+                                <input type="number" id="res-price-gbp" value="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4><i class="fas fa-credit-card"></i> المدفوع</h4>
+                        <div class="form-row form-row-4">
+                            <div class="form-group">
+                                <label>EGP</label>
+                                <input type="number" id="res-dep-egp" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label>USD $</label>
+                                <input type="number" id="res-dep-usd" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label>EUR €</label>
+                                <input type="number" id="res-dep-eur" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label>GBP £</label>
+                                <input type="number" id="res-dep-gbp" value="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4><i class="fas fa-user-tie"></i> التشغيل</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>المورد</label>
+                                <input type="text" id="res-supplier" placeholder="اسم المورد">
+                            </div>
+                            <div class="form-group">
+                                <label>مندوب المبيعات</label>
+                                <input type="text" id="res-sales" placeholder="اسم المندوب">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>ملاحظات</label>
+                            <textarea id="res-notes" rows="2" placeholder="ملاحظات إضافية..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4><i class="fas fa-calculator"></i> التكلفة</h4>
+                        <div class="form-row form-row-4">
+                            <div class="form-group"><label>EGP</label><input type="number" id="res-cost-egp" value="0"></div>
+                            <div class="form-group"><label>USD $</label><input type="number" id="res-cost-usd" value="0"></div>
+                            <div class="form-group"><label>EUR €</label><input type="number" id="res-cost-eur" value="0"></div>
+                            <div class="form-group"><label>GBP £</label><input type="number" id="res-cost-gbp" value="0"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" form="reservation-form" class="btn btn-primary btn-block" id="save-reservation-btn">
+                    <i class="fas fa-save"></i> حفظ الحجز
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reservation Detail Modal -->
+    <div id="detail-modal" class="modal" style="display:none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-full">
+            <div class="modal-header">
+                <h2><i class="fas fa-info-circle"></i> تفاصيل الحجز</h2>
+                <button class="modal-close" id="close-detail-modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" id="detail-modal-body">
+            </div>
+            <div class="modal-footer detail-actions">
+                <button class="btn btn-success" id="whatsapp-share-btn" title="واتساب">
+                    <i class="fab fa-whatsapp"></i>
+                </button>
+                <button class="btn btn-ghost" id="copy-detail-btn" title="نسخ">
+                    <i class="fas fa-copy"></i>
+                </button>
+                <button class="btn btn-primary" id="edit-from-detail-btn">
+                    <i class="fas fa-edit"></i> تعديل
+                </button>
+                <button class="btn btn-danger" id="delete-from-detail-btn">
+                    <i class="fas fa-trash"></i> حذف
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" id="bottom-nav">
+        <button class="nav-item active" data-page="dashboard">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </button>
+        <button class="nav-item" data-page="reservations">
+            <i class="fas fa-calendar-alt"></i>
+            <span>الحجوزات</span>
+        </button>
+        <button class="nav-item" data-page="finance">
+            <i class="fas fa-chart-bar"></i>
+            <span>المالية</span>
+        </button>
+        <button class="nav-item" data-page="settings">
+            <i class="fas fa-cog"></i>
+            <span>الإعدادات</span>
+        </button>
+    </nav>
+
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+    <script>if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js');</script>
+</body>
+</html>
