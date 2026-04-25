@@ -306,7 +306,8 @@ const App = {
       const r=this.currentDetailReservation; if(!r)return;
       const pd=r.price.usd>0?'$'+r.price.usd:r.price.eur>0?'€'+r.price.eur:r.price.gbp>0?'£'+r.price.gbp:'EGP '+r.price.egp;
       const msg=`🏖 *${r.trip}*\n📅 ${r.date} ${r.day}\n🏨 ${r.hotel} ${r.room!=='-'?'#'+r.room:''}\n👥 ${r.adults} adults\n⏰ Pickup: ${r.pickup}\n💰 Price: ${pd}\n🌍 ${r.nationality}`;
-      window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+      const num=localStorage.getItem('wa_number')||'';
+      window.open(`https://wa.me/${num}?text=`+encodeURIComponent(msg),'_blank');
     };
   },
 
@@ -440,6 +441,7 @@ const App = {
     const st=document.getElementById('connection-status');
     if(API.baseUrl&&!API.isDemo){st.className='connection-status connected';st.innerHTML='<i class="fas fa-circle"></i><span>متصل بالشيت</span>';}
     else{st.className='connection-status disconnected';st.innerHTML='<i class="fas fa-circle"></i><span>'+(API.isDemo?'وضع تجريبي':'غير متصل')+'</span>';}
+    document.getElementById('settings-whatsapp').value=localStorage.getItem('wa_number')||'';
   },
 
   bindSettings() {
@@ -459,6 +461,12 @@ const App = {
     };
     document.getElementById('settings-pin-remove').onclick=()=>{
       Auth.removePin();this.toast('تم إزالة PIN ✅','success');
+    };
+    // WhatsApp setting
+    document.getElementById('settings-whatsapp-save').onclick=()=>{
+      const n=document.getElementById('settings-whatsapp').value.trim().replace(/[^0-9]/g, '');
+      if(n){localStorage.setItem('wa_number',n);this.toast('تم حفظ رقم الواتساب ✅','success');}
+      else{localStorage.removeItem('wa_number');this.toast('تم مسح رقم الواتساب ✅','success');}
     };
   },
 
