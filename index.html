@@ -160,6 +160,16 @@
                     </div>
                 </div>
 
+                <!-- Overdue Alerts -->
+                <div class="card" id="overdue-card" style="display:none">
+                    <div class="card-header">
+                        <h3><i class="fas fa-exclamation-triangle" style="color:var(--danger)"></i> حجوزات متأخرة الدفع</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="overdue-list"></div>
+                    </div>
+                </div>
+
                 <!-- Charts -->
                 <div class="card" id="trips-chart-card">
                     <div class="card-header">
@@ -167,6 +177,16 @@
                     </div>
                     <div class="card-body">
                         <div class="bar-chart" id="trips-chart"></div>
+                    </div>
+                </div>
+
+                <!-- Trip Profitability -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-hand-holding-usd"></i> ربحية الرحلات</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="bar-chart" id="trip-profit-chart"></div>
                     </div>
                 </div>
 
@@ -330,6 +350,16 @@
                     </div>
                     <div class="card-body">
                         <div class="bar-chart" id="sales-chart"></div>
+                    </div>
+                </div>
+
+                <!-- Monthly Comparison -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-area"></i> مقارنة الأشهر</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="monthly-comparison" class="monthly-comparison"></div>
                     </div>
                 </div>
             </div>
