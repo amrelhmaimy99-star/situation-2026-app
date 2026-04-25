@@ -534,3 +534,26 @@ body.light-mode .ticker-item span { color:#d97706; }
   .res-trip,.res-price{color:#000!important;}
   .date-divider-text{background:#eee!important;color:#333!important;}
 }
+
+/* ===== Monthly Comparison ===== */
+.monthly-comparison { display:flex; align-items:flex-end; gap:6px; height:160px; padding-top:10px; }
+.month-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+.month-col-bar { width:100%; border-radius:6px 6px 0 0; min-height:4px; transition:height 0.6s ease; }
+.month-col-label { font-size:0.6rem; color:var(--text-muted); }
+.month-col-val { font-size:0.55rem; color:var(--text-secondary); font-family:var(--font-en); }
+
+/* ===== Overdue List ===== */
+.overdue-item { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); }
+.overdue-item:last-child { border:none; }
+.overdue-info { display:flex; flex-direction:column; gap:2px; }
+.overdue-trip { font-size:0.85rem; font-weight:600; text-transform:capitalize; }
+.overdue-detail { font-size:0.7rem; color:var(--text-muted); }
+.overdue-amount { font-size:0.85rem; font-weight:700; color:var(--danger); font-family:var(--font-en); }
+
+/* ===== Month Badge ===== */
+.month-btn { position:relative; }
+.month-count { position:absolute; top:-6px; right:-6px; min-width:16px; height:16px; padding:0 4px; background:var(--accent); color:#fff; border-radius:8px; font-size:0.55rem; font-family:var(--font-en); display:flex; align-items:center; justify-content:center; }
+
+/* ===== Ghost Button ===== */
+.btn-ghost { background:rgba(255,255,255,0.08); color:var(--text-secondary); border:1px solid var(--border); }
+.btn-ghost:active { background:var(--accent); color:#fff; }

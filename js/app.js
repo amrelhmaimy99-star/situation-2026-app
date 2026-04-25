@@ -77,6 +77,21 @@ const App = {
   },
   loadPage(p) {
     switch(p){case'dashboard':this.loadDashboard();break;case'reservations':this.loadReservations();break;case'finance':this.loadFinance();break;case'settings':this.loadSettings();break;}
+    if(!this._monthCountsLoaded){this._monthCountsLoaded=true;this.loadMonthCounts();}
+  },
+
+  async loadMonthCounts() {
+    const months=['01','02','03','04','05','06','07','08','09','10','11','12'];
+    for(const m of months){
+      try{
+        const r=await API.getMonthData(m+'/2026');
+        if(!r.success)continue;
+        const c=r.data.length; if(!c)continue;
+        document.querySelectorAll(`.month-btn[data-month="${m}/2026"]`).forEach(btn=>{
+          if(!btn.querySelector('.month-count')){const b=document.createElement('span');b.className='month-count';b.textContent=c;btn.appendChild(b);}
+        });
+      }catch(e){}
+    }
   },
 
   // ===== Dashboard =====
@@ -92,9 +107,34 @@ const App = {
       document.getElementById('stat-revenue-egp').textContent=this.fmt(s.revenue.egp);
       document.getElementById('stat-net').textContent='EGP '+this.fmt(s.totalNetEGP);
       this.barChart('trips-chart',s.topTrips||[],['#3b82f6','#6366f1','#8b5cf6','#a855f7','#06b6d4','#10b981','#f59e0b','#ef4444']);
+      this.barChart('trip-profit-chart',s.topTrips||[],['#10b981','#06b6d4','#3b82f6','#8b5cf6','#f59e0b','#ef4444']);
       this.renderNats('nationality-chart',s.nationalities||[]);
       this.renderToday(m);
+      this.renderOverdue(m);
     } catch(e){this.toast('خطأ في تحميل البيانات','error');}
+  },
+
+  async renderOverdue(month) {
+    const card=document.getElementById('overdue-card');
+    const list=document.getElementById('overdue-list');
+    try {
+      const m=month&&month!=='all'?month:String(new Date().getMonth()+1).padStart(2,'0')+'/'+new Date().getFullYear();
+      const r=await API.getMonthData(m); if(!r.success)return;
+      const today=new Date(); today.setHours(0,0,0,0);
+      const overdue=r.data.filter(x=>{
+        const tp=x.price.egp+x.price.usd+x.price.eur+x.price.gbp;
+        const td=x.deposit.egp+x.deposit.usd+x.deposit.eur+x.deposit.gbp;
+        if(td>=tp||tp===0)return false;
+        const p=x.date.split('/');if(p.length!==3)return false;
+        const d=new Date(p[2],p[1]-1,p[0]); return d<today;
+      }).slice(0,8);
+      if(!overdue.length){card.style.display='none';return;}
+      card.style.display='block';
+      list.innerHTML=overdue.map(r=>{
+        const rest=r.price.usd>0?'$'+(r.price.usd-r.deposit.usd):'EGP '+(r.price.egp-r.deposit.egp);
+        return `<div class="overdue-item"><div class="overdue-info"><span class="overdue-trip">${r.trip}</span><span class="overdue-detail">${r.date} | ${r.hotel}</span></div><span class="overdue-amount">${rest}</span></div>`;
+      }).join('');
+    } catch(e){}
   },
 
   barChart(id,data,colors) {
@@ -374,7 +414,24 @@ const App = {
       document.getElementById('fin-net').textContent='EGP '+this.fmt(s.totalNetEGP);
       this.barChart('suppliers-chart',s.suppliers||[],['#10b981','#06b6d4','#3b82f6','#8b5cf6','#f59e0b']);
       if(s.sales)this.barChart('sales-chart',s.sales,['#f59e0b','#ef4444','#ec4899','#3b82f6','#10b981']);
+      this.renderMonthlyComparison();
     } catch(e){}
+  },
+
+  async renderMonthlyComparison() {
+    const container=document.getElementById('monthly-comparison');
+    const months=['01','02','03','04','05','06','07','08','09','10','11','12'];
+    const names=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+    const counts=[];
+    for(const m of months){
+      try{const r=await API.getMonthData(m+'/2026');counts.push(r.success?r.data.length:0);}catch(e){counts.push(0);}
+    }
+    const max=Math.max(...counts,1);
+    container.innerHTML=months.map((m,i)=>{
+      const h=Math.round((counts[i]/max)*120);
+      const color=counts[i]>0?`hsl(${210+i*12},70%,55%)`:'rgba(255,255,255,0.05)';
+      return `<div class="month-col"><span class="month-col-val">${counts[i]||''}</span><div class="month-col-bar" style="height:${h}px;background:${color}"></div><span class="month-col-label">${names[i].substring(0,3)}</span></div>`;
+    }).join('');
   },
 
   // ===== Settings =====
